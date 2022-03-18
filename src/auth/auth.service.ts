@@ -51,4 +51,27 @@ export class AuthService {
             throw new Error(e)
         }
     }
+
+    async signInWithFacebook(data) {
+        if(!data.user) throw new BadRequestException();
+        
+        let user = (await this.usersService.findBy({ where: [{ facebookId: data.user.id }] }))[0];
+        if(user) return this.login(user);
+
+        user = (await this.usersService.findBy({ where: [{ email: data.user.email }] }))[0];
+        if(user) throw new ForbiddenException('User already exists, but facebook account was not connected to user\'s account')
+
+        try {
+            const newUser = new User();
+            newUser.firstName = data.user.firstName;
+            newUser.lastName = data.user.lastName;
+            newUser.email = data.user.email;
+            newUser.facebookId = data.user.id;
+
+            await this.usersService.store(newUser);
+            return this.login(newUser);
+        } catch(e) {
+            throw new Error(e)
+        }
+    }
 }

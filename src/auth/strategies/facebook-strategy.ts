@@ -1,27 +1,33 @@
-import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, VerifyCallback } from 'passport-google-oauth20';
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { Profile, Strategy } from "passport-facebook";
 
 @Injectable()
-export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
-
+export class FacebookStrategy extends PassportStrategy(Strategy, "facebook") {
   constructor() {
     super({
       clientID: process.env.FACEBOOK_CLIENT_ID,
       clientSecret: process.env.FACEBOOK_SECRET,
-      callbackURL: 'http://localhost:3001/auth/facebook/redirect',
-      scope: ['email', 'profile'],
+      callbackURL: "http://localhost:3001/auth/facebook/redirect",
+      scope: "email",
+      profileFields: ["emails", "name"],
     });
   }
 
-  async validate (accessToken: string, refreshToken: string, profile: any, done: VerifyCallback): Promise<any> {
-    const { id, name, emails } = profile
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: Profile,
+    done: (err: any, user: any, info?: any) => void
+  ): Promise<any> {
+    const { name, emails , id } = profile;
     const user = {
       id,
       email: emails[0].value,
       firstName: name.givenName,
-      lastName: name.familyName
-    }
+      lastName: name.familyName,
+    };
+  
     done(null, user);
   }
 }
